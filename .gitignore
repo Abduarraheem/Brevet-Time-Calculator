@@ -1,0 +1,4 @@
+*.ini
+*.pyc
+*.csv
+__pycache__

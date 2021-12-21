@@ -1,0 +1,131 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>ACP Controle Times</title>
+
+  <!-- 'viewport' is used by bootstrap to respond to device size -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Javascript:  JQuery from a content distribution network (CDN) -->
+  <script
+     src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+  </script>
+
+  <!-- Bootstrap includes javascript and css  (must follow jquery) -->
+  <link rel="stylesheet"
+   href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+   <script
+    src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js">
+   </script>
+
+  <!-- moment.js is the JavaScript equivalent of arrow.py -->
+  <script 
+    src="{{ url_for('static', filename="js/moment.min.js") }}"></script>
+
+</head>
+
+   <!-- Our own style sheet -->
+   <link rel="stylesheet" href="/static/css/calc.css" />
+
+<body>
+<!-- bootstrap requires a 'container' div around content -->
+<div class="container">
+
+<h1>ACP Brevet Times</h1>
+  <!--
+  -- If there are any warnings or other messages from a prior
+  -- request to the server, 
+  -- they appear above the rest of the content, just until the next 
+  -- action.  (This is only on request/response transactions that
+  -- result in regenerating the page, not on every xmlhttp request.) 
+  -->
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+<!-- Design on bootstrap grid -->
+<form role="form">
+<div class="row">
+  <!-- <div class="row"> -->
+  <div class="col-md-12"> 
+
+  <table class="control_time_table">
+    <tbody id=time_table>
+
+      <tr>
+        <th> Miles </th>
+        <th> Km </th>
+        <th>Location</th>
+        <th>Open</th>
+        <th>Close</th>
+        <th>Notes</th>
+      </tr>
+    </tbody>
+    <!-- </tr> -->
+  </table>
+
+  </div> <!-- col -->
+  </div> <!-- row -->
+</form>
+
+<p class="message" id="message" style=color:red> </p>
+
+
+<script type="text/javascript">
+var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
+var DISPLAY_DATA_URL = SCRIPT_ROOT + "/_get_from_db";
+
+$(document).ready(function(){
+   // Do the following when the page is finished loading
+	$(function(){
+    $("#message").html("Retrieving data please wait...")
+    $.getJSON(DISPLAY_DATA_URL,
+    function(data){
+    var db_data = data.result;
+    var message = "";
+    var time_table = document.getElementById("time_table");
+    if (db_data.length == 0){
+      message = "There is nothing saved in the database. Please save some times and try again."
+      time_table.remove();
+    }
+    $("#message").html(message);
+    for (var i = 0; i < db_data.length; i++){
+      console.log(db_data[i]["controls"].length)
+      for(var j = 0; j < db_data[i]["controls"].length; j++){
+
+        var miles = db_data[i]["controls"][j]["miles"]; 
+        var km = db_data[i]["controls"][j]["km"];
+        var location = db_data[i]["controls"][j]["location"];
+        var open = moment(db_data[i]["controls"][j]["open"]).format("MM/DD/YYYY H:mm"); 
+        var close = moment(db_data[i]["controls"][j]["close"]).format("MM/DD/YYYY H:mm");
+
+        if(open == "" || close == ""){
+          continue;
+        }
+        var control = document.createElement("tr");
+        control.className = "control";
+        var entries = [miles, km, location, open, close]
+        for(var k = 0; k < 5; k++){
+          var tdTag = document.createElement("td");
+          var inputTag = document.createElement("input");
+          inputTag.setAttribute("value", entries[k])
+          inputTag.setAttribute("readonly", true)
+          tdTag.appendChild(inputTag)
+          control.appendChild(tdTag)
+        }
+        time_table.appendChild(control)
+      }
+    }
+    });
+	});   
+});   // end of what we do on document ready
+</script>
+
+</div>
+</body> </html>
